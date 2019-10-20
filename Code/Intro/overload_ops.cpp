@@ -13,11 +13,11 @@ struct base_type {
     using value_type = T;
     T v;
 
-    base_type() : v{} {}
-    base_type(T x) : v{x} {}
+    constexpr base_type() : v{} {}
+    constexpr base_type(T x) : v{x} {}
 
     template <typename Res>
-    Res eval() const {
+    constexpr Res eval() const {
         typename Res::value_type x = v;
         return {x};
     }
@@ -29,12 +29,12 @@ struct int_ : base_type<int> {
     using base::base;
 
     template <typename T>
-    int_(T const& x, std::enable_if_t<is_my_expr<T>::value, int> = 0)
+    constexpr int_(T const& x, std::enable_if_t<is_my_expr<T>::value, int> = 0)
     : base{x.template eval<int_>().v}
     {}
 
     template <typename T>
-    int_& operator=(T const& x) {
+    constexpr int_& operator=(T const& x) {
         v = x.template eval<int_>().v;
         return *this;
     }
@@ -46,12 +46,12 @@ struct float_ : base_type<float> {
     using base::base;
 
     template <typename T>
-    float_(T const& x, std::enable_if_t<is_my_expr<T>::value, int> = 0)
+    constexpr float_(T const& x, std::enable_if_t<is_my_expr<T>::value, int> = 0)
     : base{x.template eval<float_>().v}
     {}
 
     template <typename T>
-    float_& operator=(T const& x) {
+    constexpr float_& operator=(T const& x) {
         v = x.template eval<float_>().v;
         return *this;
     }
@@ -63,12 +63,12 @@ struct double_ : base_type<double> {
     using base::base;
 
     template <typename T>
-    double_(T const& x, std::enable_if_t<is_my_expr<T>::value, int> = 0)
+    constexpr double_(T const& x, std::enable_if_t<is_my_expr<T>::value, int> = 0)
     : base{x.template eval<double_>().v}
     {}
 
     template <typename T>
-    double_& operator=(T const& x) {
+    constexpr double_& operator=(T const& x) {
         base::v = x.template eval<double_>().v;
         return *this;
     }
@@ -82,7 +82,7 @@ struct divv {
     O2 o2;
 
     template <typename Res>
-    Res eval() const {
+    constexpr Res eval() const {
         return Res{o1.template eval<Res>().v / o2.template eval<Res>().v };
     }
 };
@@ -94,7 +94,7 @@ struct mul {
     O2 o2;
 
     template <typename Res>
-    Res eval() const {
+    constexpr Res eval() const {
         return Res{o1.template eval<Res>().v * o2.template eval<Res>().v };
     }
 };
@@ -106,7 +106,7 @@ struct plus {
     O2 o2;
 
     template <typename Res>
-    Res eval() const {
+    constexpr Res eval() const {
         return Res{o1.template eval<Res>().v + o2.template eval<Res>().v };
     }
 };
@@ -118,7 +118,7 @@ struct minus {
     O2 o2;
 
     template <typename Res>
-    Res eval() const {
+    constexpr Res eval() const {
         return Res{o1.template eval<Res>().v - o2.template eval<Res>().v };
     }
 };
@@ -126,13 +126,13 @@ struct minus {
 
 
 template <typename O1, typename O2>
-divv<O1, O2> operator/(O1 o1, O2 o2) { return {o1, o2}; }
+constexpr divv<O1, O2> operator/(O1 o1, O2 o2) { return {o1, o2}; }
 template <typename O1, typename O2>
-mul<O1, O2> operator*(O1 o1, O2 o2) { return {o1, o2}; }
+constexpr mul<O1, O2> operator*(O1 o1, O2 o2) { return {o1, o2}; }
 template <typename O1, typename O2>
-plus<O1, O2> operator+(O1 o1, O2 o2) { return {o1, o2}; }
+constexpr plus<O1, O2> operator+(O1 o1, O2 o2) { return {o1, o2}; }
 template <typename O1, typename O2>
-minus<O1, O2> operator-(O1 o1, O2 o2) { return {o1, o2}; }
+constexpr minus<O1, O2> operator-(O1 o1, O2 o2) { return {o1, o2}; }
 
 int main() {
 
@@ -174,4 +174,14 @@ int main() {
         std::cout << z.v << "\n";
     }
 
+    {
+        constexpr int_ x{14};
+        constexpr int_ y{3};
+
+        constexpr double_ z  = x/y+y/x; // This does not work without constructor !!!
+
+        static_assert(z.v == 14./3.+3./14., "");
+
+        std::cout << z.v << "\n";
+    }
 }
