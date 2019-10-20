@@ -23,7 +23,16 @@ struct base_type {
     }
 };
 
-struct int_ : base_type<double> {
+struct int_ : base_type<int> {
+    using base = base_type<int>;
+
+    using base::base;
+
+    template <typename T>
+    int_(T const& x, std::enable_if_t<is_my_expr<T>::value, int> = 0)
+    : base{x.template eval<int_>().v}
+    {}
+
     template <typename T>
     int_& operator=(T const& x) {
         v = x.template eval<int_>().v;
@@ -32,6 +41,15 @@ struct int_ : base_type<double> {
 };
 
 struct float_ : base_type<float> {
+    using base = base_type<float>;
+
+    using base::base;
+
+    template <typename T>
+    float_(T const& x, std::enable_if_t<is_my_expr<T>::value, int> = 0)
+    : base{x.template eval<float_>().v}
+    {}
+
     template <typename T>
     float_& operator=(T const& x) {
         v = x.template eval<float_>().v;
@@ -117,21 +135,41 @@ template <typename O1, typename O2>
 minus<O1, O2> operator-(O1 o1, O2 o2) { return {o1, o2}; }
 
 int main() {
+
     {
-        int_ x{10};
+        int x{14};
+        int y{3};
+
+        double zi = x/y+y/x;
+        std::cout << zi << "\n";
+    }
+
+    {
+        double x{14};
+        double y{3};
+
+        double zi = x/y+y/x;
+        std::cout << zi << "\n";
+    }
+
+    {
+        int_ x{14};
         int_ y{3};
 
-        double_ z  = x/y; // This does not work without constructor !!!
+        int_ zi = x/y+y/x;
+
+        std::cout << zi.v << "\n";
+        double_ z  = x/y+y/x; // This does not work without constructor !!!
 
         std::cout << z.v << "\n";
     }
     {
-        int_ x{10};
+        int_ x{14};
         int_ y{3};
 
         double_ z;
         std::cout << z.v << "\n";
-        z = x/y;
+        z = x/y+y/x;
 
         std::cout << z.v << "\n";
     }
